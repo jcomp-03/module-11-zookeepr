@@ -49,6 +49,12 @@ function filterByQuery(query, animalsArray) {
     return filteredResults;
 }
 
+// used in params route further down below
+function findById(id, animalsArray) {
+  const result = animalsArray.filter(animal => animal.id === id)[0];
+  return result;
+}
+
 // adding the route the front-end can request data from
 // the get method takes a string which describes the route the
 // client will fetch from. the second parameter is a callback which
@@ -63,6 +69,22 @@ app.get('/api/animals', (req, res) => {
     res.json(results);
   });
 
+// order of routes is important. A params route must come after
+// the other GET routes
+app.get('/api/animals/:id', (req, res) => {
+  // req.params allows us to query for a specific animal, rather
+  // than an entire array of all the animals. The params object needs
+  // to be defined in the route path, as shown above, i.e.
+  // /api/animals/:id. The req.params filters by a single property, often
+  // intended to retrieve a single record, i.e. the id of a particular animal
+  const result = findById(req.params.id, animals);
+  if(result) {
+    res.json(result);
+  } else {
+    res.sendStatus(404);
+  }
+  
+})
 
 // make our server listen by chaining the .listen method
 app.listen(PORT, () => {
