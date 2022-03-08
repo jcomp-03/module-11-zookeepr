@@ -8,8 +8,9 @@ const PORT = process.env.PORT || 3001;
 // instantiate the server
 const app = express();
 
-// we're breaking out the filter by query into its own function
-// instead of keeping it inside the .get method
+// create separate function filterByQuery to run code logic for
+// returning only the animals which meet the filtering requirements
+// we create this function to not bloat the app.get method below
 function filterByQuery(query, animalsArray) {
     let personalityTraitsArray = [];
     // Note that we save the animalsArray as filteredResults here:
@@ -83,7 +84,6 @@ app.get('/api/animals/:id', (req, res) => {
   } else {
     res.sendStatus(404);
   }
-  
 })
 
 // make our server listen by chaining the .listen method
