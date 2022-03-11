@@ -126,6 +126,15 @@
         "zany"
       ],
       "id": "12"
+    },
+    {
+      "name": "Alfredo",
+      "species": "monkey",
+      "diet": "herbivore",
+      "personalityTraits": [
+        "zany"
+      ],
+      "id": "13"
     }
   ]
 }

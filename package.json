@@ -20,5 +20,8 @@
   "homepage": "https://github.com/jcomp-03/module-11-zookeepr#readme",
   "dependencies": {
     "express": "^4.17.3"
+  },
+  "engines": {
+    "node": "16.13"
   }
 }
