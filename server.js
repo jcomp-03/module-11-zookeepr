@@ -1,4 +1,6 @@
 // we'll require the following modules/packages
+const apiRoutes = require('./routes/apiRoutes'); // the require statement will read the index.js file in this location
+const htmlRoutes = require('./routes/htmlRoutes'); // the require statement will read the index.js file in this location
 const express = require('express'); // 3rd-party module
 const fs = require('fs'); // native to Node.js
 const path = require('path'); // native to Node.js
@@ -10,6 +12,7 @@ const PORT = process.env.PORT || 3001;
 
 // instantiate the server
 const app = express();
+
 // parse incoming string or array data. We used the app.use() method. This is a method executed
 // by our Express.js server that mounts a function to the server that our requests will pass through before 
 // getting to the intended endpoint. The functions we can mount to our server are referred to as middleware. 
@@ -21,176 +24,22 @@ const app = express();
 // req.body JavaScript object. Both of the above middleware functions need to be set up every time you create
 // a server that's looking to accept POST data.
 app.use(express.urlencoded({ extended: true }));
+
 // parse incoming JSON data
 app.use(express.json());
+
+// any time a client navigates to <ourhost>/api, the app will use
+// the router we set up in apiRoutes. If '/' is the endpoint, then
+// the router will serve back our HTML routes.
+app.use('/api', apiRoutes);
+app.use('/', htmlRoutes);
+
 // this middleware method allows us to access front-end code
 // without having a specific server endpoint created for it.
-app.use(express.static('public'));
-
-// create separate function filterByQuery to run code logic for
-// returning only the animals which meet the filtering requirements
-// we create this function to not bloat the app.get method below
-function filterByQuery(query, animalsArray) {
-    let personalityTraitsArray = [];
-    // Note that we save the animalsArray as filteredResults here:
-    let filteredResults = animalsArray;
-    if (query.personalityTraits) {
-      // Save personalityTraits as a dedicated array.
-      // If personalityTraits is a string, place it into a new array and save.
-      if (typeof query.personalityTraits === 'string') {
-        personalityTraitsArray = [query.personalityTraits];
-      } else {
-        personalityTraitsArray = query.personalityTraits;
-      }
-      // Loop through each trait in the personalityTraits array:
-      personalityTraitsArray.forEach(trait => {
-        // Check the trait against each animal in the filteredResults array.
-        // Remember, it is initially a copy of the animalsArray,
-        // but here we're updating it for each trait in the .forEach() loop.
-        // For each trait being targeted by the filter, the filteredResults
-        // array will then contain only the entries that contain the trait,
-        // so at the end we'll have an array of animals that have every one 
-        // of the traits when the .forEach() loop is finished.
-        filteredResults = filteredResults.filter(
-          animal => animal.personalityTraits.indexOf(trait) !== -1
-        );
-      });
-    }
-    if (query.diet) {
-      filteredResults = filteredResults.filter(animal => animal.diet === query.diet);
-    }
-    if (query.species) {
-      filteredResults = filteredResults.filter(animal => animal.species === query.species);
-    }
-    if (query.name) {
-      filteredResults = filteredResults.filter(animal => animal.name === query.name);
-    }
-    // return the filtered results:
-    return filteredResults;
-}
-
-// used in params route further down below
-function findById(id, animalsArray) {
-  const result = animalsArray.filter(animal => animal.id === id)[0];
-  return result;
-}
-
-// used to add an animal object to the animals array
-// used in POST request method
-function createNewAnimal(body, animalsArray) {
-  // here you set the entirety of the body content to the constant animal
-  const animal = body;
-  // now you push that object to the end of the animal array
-  animalsArray.push(animal);
-  // we need to save the Javascript array data as JSON,
-  // so we use JSON.stringify() to convert it
-  fs.writeFileSync(
-    path.join(__dirname, './data/animals.json'),
-    JSON.stringify({ animals: animalsArray }, null, 2)
-  );
-
-  return animal;
-}
-
-// validate the existence and the type of data submitted during POST request
-function validateAnimal(animal) {
-  if (!animal.name || typeof animal.name !== 'string') {
-    return false;
-  }
-  if (!animal.species || typeof animal.species !== 'string') {
-    return false;
-  }
-  if (!animal.diet || typeof animal.diet !== 'string') {
-    return false;
-  }
-  if (!animal.personalityTraits || !Array.isArray(animal.personalityTraits)) {
-    return false;
-  }
-  return true;
-}
-
-
-
-// adding the route the front-end can request data from
-// the get method takes a string which describes the route the
-// client will fetch from. the second parameter is a callback which
-// is called every time the route is accessed with a GET request.
-// Note we're using the send method of the res parameter (short for response)
-// to send the string 'Hello' to the client
-app.get('/api/animals', (req, res) => {
-    let results = animals;
-    if(req.query) {
-        results = filterByQuery(req.query, results);
-    }
-    res.json(results);
-  });
-
-// order of routes is important. A params route must come after
-// the other GET routes
-app.get('/api/animals/:id', (req, res) => {
-  // req.params allows us to query for a specific animal, rather
-  // than an entire array of all the animals. The params object needs
-  // to be defined in the route path, as shown above, i.e.
-  // /api/animals/:id. The req.params filters by a single property, often
-  // intended to retrieve a single record, i.e. the id of a particular animal
-  // This is in contrast to req.query, which is multifaceted, combining multiple
-  // parameters 
-  const result = findById(req.params.id, animals);
-  if(result) {
-    res.json(result);
-  } else {
-    res.sendStatus(404);
-  }
-})
-
-// POST request made from client side to server to accept data, rather
-// than retrieving data as in a GET request
-app.post('/api/animals', (req, res) => {
-  // set id based on what the next index of the array will be
-  req.body.id = animals.length.toString();
-
-  // if any data in req.body is incorrect, send 400 error back
-  if (!validateAnimal(req.body)) {
-    res.status(400).send('The animal is not properly formatted.');
-  } else {
-  // add animal to json file and animals array in this function
-  const animal = createNewAnimal(req.body, animals);
-  res.json(animal);
-  }
-});
-
-// GET request. Serves index.html from our Express.js server
-// Unlike most GET and POST routes, this route's sole purpose
-// is to respond with an HTML page to display in the browser
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, './public/index.html'));
-});
-
-// GET request. Serves animals.html. You'll notice the route
-// does not have /api in it, because it does not deal in the
-// transference of JSON data. It's purely serving up an HTML page
-app.get('/animals', (req, res) => {
-  res.sendFile(path.join(__dirname, './public/animals.html'));
-});
-
-// GET request. Serves zookeepers.html. Same case as above. No /api in the
-// route because its purpose is to just spit back an HTML file. Makes
-// sense not to describe the route with the word 'api'
-app.get('/zookeepers', (req, res) => {
-  res.sendFile(path.join(__dirname, './public/zookeepers.html'));
-});
-
-// wildcard route to catch any routes that do not exist. Sends
-// back homepage index.html instead. Order matters, this catch-all
-// route must come at least or it will supersede good routes
-// placed after itself
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, './public/index.html'));
-});
-
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 // make our server listen by chaining the .listen method
 app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`);
-  });
+});
