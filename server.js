@@ -28,15 +28,15 @@ app.use(express.urlencoded({ extended: true }));
 // parse incoming JSON data
 app.use(express.json());
 
+// this middleware method allows us to access front-end code
+// without having a specific server endpoint created for it.
+app.use(express.static(path.join(__dirname, 'public')));
+
 // any time a client navigates to <ourhost>/api, the app will use
 // the router we set up in apiRoutes. If '/' is the endpoint, then
 // the router will serve back our HTML routes.
 app.use('/api', apiRoutes);
 app.use('/', htmlRoutes);
-
-// this middleware method allows us to access front-end code
-// without having a specific server endpoint created for it.
-app.use(express.static(path.join(__dirname, 'public')));
 
 
 // make our server listen by chaining the .listen method

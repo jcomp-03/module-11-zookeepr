@@ -38,7 +38,7 @@ router.get('/animals/:id', (req, res) => {
     } else {
       res.sendStatus(404);
     }
-})
+});
 
 
 // POST request made from client side to server to accept data, rather
