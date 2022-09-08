@@ -11,7 +11,7 @@ const { animals } = require('./data/animals');
 const PORT = process.env.PORT || 3001;
 
 // instantiate the server
-const app = express();
+// const app = express();
 
 // parse incoming string or array data. We used the app.use() method. This is a method executed
 // by our Express.js server that mounts a function to the server that our requests will pass through before 
